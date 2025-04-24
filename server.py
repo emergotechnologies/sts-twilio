@@ -8,7 +8,7 @@ import ssl
 
 def sts_connect():
     sts_ws = websockets.connect(
-    "wss://agent.deepgram.com/agent", subprotocols=["token", "YOUR_DEEPGRAM_API_KEY"]
+    "wss://agent.deepgram.com/v1/agent/converse", subprotocols=["token", "XXX"]
     )
     return sts_ws
 
@@ -19,29 +19,41 @@ async def twilio_handler(twilio_ws):
 
     async with sts_connect() as sts_ws:
         config_message = {
-            "type": "SettingsConfiguration",
+            "type": "Settings",
             "audio": {
                 "input": {
-                    "encoding": "mulaw",
-                    "sample_rate": 8000,
+                "encoding": "mulaw",
+                "sample_rate": 8000
                 },
                 "output": {
-                    "encoding": "mulaw",
-                    "sample_rate": 8000,
-                    "container": "none",
-                },
+                "encoding": "mulaw",
+                "sample_rate": 8000,
+                "container": "none"
+                }
             },
             "agent": {
-                "listen": {"model": "nova-2"},
+                "language": "multi",
                 "think": {
                     "provider": {
-                        "type": "anthropic",
+                        "type": "open_ai",
+                        "model": "gpt-4o-mini"
                     },
-                    "model": "claude-3-haiku-20240307",
-                    "instructions": "You are a helpful car seller.",
+                    "prompt": "Du bist ein hilfreicher Assistent für XXX"
                 },
-                "speak": {"model": "aura-asteria-en"},
-            },
+                "speak": {
+                    "provider": {
+                        "type": "eleven_labs",
+                        "model_id": "eleven_flash_v2_5"
+                    },
+                    "endpoint": {
+                        "url": "https://api.elevenlabs.io/v1/text-to-speech/bIHbv24MWmeRgasZH58o",
+                        "headers": {
+                            "xi-api-key": "XXX"
+                        }
+                    }
+                },
+                "greeting": "Hallo, hier spricht XXX, der digitale Assistent des Sanitätshaus XXX. Wie kann ich helfen?"
+            }
         }
 
         await sts_ws.send(json.dumps(config_message))
@@ -146,8 +158,8 @@ def main():
     # server = websockets.serve(router, '0.0.0.0', 443, ssl=ssl_context)
 
     # use this if not using ssl
-    server = websockets.serve(router, "localhost", 5000)
-    print("Server starting on ws://localhost:5000")
+    server = websockets.serve(router, "localhost", 8080)
+    print("Server starting on ws://localhost:8080")
 
     asyncio.get_event_loop().run_until_complete(server)
     asyncio.get_event_loop().run_forever()
